@@ -15,15 +15,17 @@
  */
 package com.vaadin.flow.component.contextmenu;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
-import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
+import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.data.binder.HasItemsAndComponents;
 import com.vaadin.flow.dom.Element;
 
 /**
@@ -34,11 +36,12 @@ import com.vaadin.flow.dom.Element;
 @SuppressWarnings("serial")
 @HtmlImport("flow-component-renderer.html")
 public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
-        implements HasComponents {
+        implements HasItemsAndComponents<Object> {
 
     private Component target;
 
     private Element template;
+    private ListBox<Object> listbox;
     private Element container;
 
     /**
@@ -48,7 +51,9 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
         template = new Element("template");
         getElement().appendChild(template);
 
-        container = new Element("div");
+        listbox = new ListBox<>();
+        container = listbox.getElement();
+
         getElement().appendVirtualChild(container);
 
         getElement().getNode()
@@ -130,6 +135,29 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
         container.getChildren().forEach(childElement -> ComponentUtil
                 .findComponents(childElement, childComponents::add));
         return childComponents.build();
+    }
+
+    @Override
+    public void setItems(Collection<Object> items) {
+        listbox.setItems(items);
+    }
+
+    @Override
+    public void addComponents(Object afterItem, Component... components) {
+        listbox.addComponents(afterItem, components);
+    }
+
+    @Override
+    public void prependComponents(Object beforeItem, Component... components) {
+        listbox.prependComponents(beforeItem, components);
+    }
+
+    public void setCloseOnClick(boolean closeOnClick) {
+        setCloseOn(closeOnClick ? "click" : "none");
+    }
+
+    public boolean isCloseOnClick() {
+        return "click".equals(getCloseOnString());
     }
 
     private void attachComponentRenderer() {

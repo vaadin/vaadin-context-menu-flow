@@ -40,6 +40,11 @@
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-list-box-flow</artifactId>
+            <version>[1.0,2.0)</version>
+        </dependency>
 
         <!-- Dependencies for the demo -->
         <dependency>
