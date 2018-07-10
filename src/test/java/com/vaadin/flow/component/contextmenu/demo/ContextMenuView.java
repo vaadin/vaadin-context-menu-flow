@@ -41,6 +41,7 @@ public class ContextMenuView extends DemoView {
     public void initView() {
         addBasicContextMenu();
         addContextMenuWithComponents();
+        addContextMenuWithChildTargets();
         addCard("Target component used in the demo");
     }
 
@@ -101,12 +102,47 @@ public class ContextMenuView extends DemoView {
         message.setId("context-menu-with-components-message");
     }
 
+    private void addContextMenuWithChildTargets() {
+        // begin-source-example
+        // source-example-heading: Accessing the Target Child
+        ContextMenu contextMenu = new ContextMenu();
+
+        Checkbox checkboxFoo = new Checkbox("Foo");
+        Checkbox checkboxBar = new Checkbox("Bar");
+
+        Div target = new Div(checkboxFoo, checkboxBar);
+
+        contextMenu.setTarget(target);
+
+        Label message = new Label("-");
+
+        contextMenu.addItem("Toggle", e -> {
+            e.getTargetChild().map(targetChild -> (Checkbox) targetChild)
+                    .ifPresent(checkbox -> checkbox
+                            .setValue(!checkbox.getValue()));
+        });
+
+        contextMenu.addItem("Get value", e -> {
+            e.getTargetChild().map(targetChild -> (Checkbox) targetChild)
+                    .ifPresent(checkbox -> message
+                            .setText(String.format("%s value: %s",
+                                    checkbox.getLabel(), checkbox.getValue())));
+        });
+
+        // end-source-example
+
+        addCard("Accessing the Target Child", target, message, contextMenu);
+        checkboxFoo.setId("checkbox-foo");
+        checkboxBar.setId("checkbox-bar");
+        message.setId("context-menu-with-child-targets-message");
+    }
+
     // begin-source-example
     // source-example-heading: Target component used in the demo
     private Component createTargetComponent() {
         H2 header = new H2("Right click this component");
         Paragraph paragraph = new Paragraph("(or long touch on mobile)");
-        Div div = new Div(header, paragraph);
+        Div div = new Div(new Div(header), new Div(new Div(paragraph)));
         div.getStyle().set("border", "1px solid black").set("textAlign",
                 "center");
         return div;

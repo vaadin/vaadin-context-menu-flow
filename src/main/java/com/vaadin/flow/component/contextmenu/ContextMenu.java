@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.contextmenu.MenuItem.MenuItemClickEvent;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.shared.Registration;
@@ -42,10 +42,18 @@ import com.vaadin.flow.shared.Registration;
 public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
         implements HasComponents {
 
+    // Fired with right-click or long touch
+    private static final String DEFAULT_OPEN_EVENT = "vaadin-contextmenu";
+
+    private static final String CLICK_EVENT = "click";
+
     private Component target;
 
     private Element template;
     private Element container;
+
+    private Registration openOnRegistration;
+    private Element targetChildElement;
 
     /**
      * Creates an empty context menu.
@@ -63,6 +71,8 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
 
         // Workaround for: https://github.com/vaadin/flow/issues/3496
         getElement().setProperty("opened", false);
+
+        setOpenOn(DEFAULT_OPEN_EVENT);
     }
 
     /**
@@ -91,6 +101,48 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
         getElement().getNode().runWhenAttached(
                 ui -> ui.beforeClientResponse(this, context -> ui.getPage()
                         .executeJavaScript("$0.listenOn=$1", this, target)));
+        updateOpenOnListener();
+    }
+
+    private void updateOpenOnListener() {
+        if (openOnRegistration != null) {
+            openOnRegistration.remove();
+        }
+        if (target == null) {
+            return;
+        }
+
+        //@formatter:off
+        String childIndexScript = "(function(){"
+                + "var e = event.target;"
+                + "if(e == element){"
+                +   "return -1;"
+                + "}"
+                + "while(e.parentElement != element){"
+                +   "e = e.parentElement;"
+                + "}"
+                + "var i = 0;" 
+                + "while((e = e.previousSibling) != null){" 
+                + "  i++;"
+                + "}"
+                + "return i;"
+                + "})()";
+        //@formatter:on
+        openOnRegistration = target.getElement()
+                .addEventListener(getOpenOnString(), event -> {
+                    int index = (int) event.getEventData()
+                            .getNumber(childIndexScript);
+                    if (index == -1) {
+                        targetChildElement = null;
+                    } else {
+                        targetChildElement = target.getElement()
+                                .getChild(index);
+                    }
+                }).addEventData(childIndexScript);
+    }
+
+    protected Element getTargetChildElement() {
+        return targetChildElement;
     }
 
     /**
@@ -116,8 +168,18 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
      *            behavior.
      */
     public void setOpenOnClick(boolean openOnClick) {
-        String value = (openOnClick) ? "click" : "vaadin-contextmenu";
+        String value = openOnClick ? CLICK_EVENT : DEFAULT_OPEN_EVENT;
         setOpenOn(value);
+    }
+
+    @Override
+    protected void setOpenOn(String openOn) {
+        assert openOn != null;
+        if (openOn.equals(getOpenOnString())) {
+            return;
+        }
+        super.setOpenOn(openOn);
+        updateOpenOnListener();
     }
 
     /**
@@ -130,7 +192,7 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
      *         only. Otherwise the context menu follows the default behavior.
      */
     public boolean isOpenOnClick() {
-        return "click".equals(getOpenOnString());
+        return CLICK_EVENT.equals(getOpenOnString());
     }
 
     /**
@@ -161,9 +223,8 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
      * @see #add(Component...)
      */
     public MenuItem addItem(String text,
-            ComponentEventListener<ClickEvent<MenuItem>> clickListener) {
-        MenuItem menuItem = new MenuItem();
-        add(menuItem);
+            ComponentEventListener<MenuItemClickEvent> clickListener) {
+        MenuItem menuItem = addItem();
         menuItem.setText(text);
         if (clickListener != null) {
             menuItem.addClickListener(clickListener);
@@ -191,13 +252,18 @@ public class ContextMenu extends GeneratedVaadinContextMenu<ContextMenu>
      * @see #add(Component...)
      */
     public MenuItem addItem(Component component,
-            ComponentEventListener<ClickEvent<MenuItem>> clickListener) {
-        MenuItem menuItem = new MenuItem();
-        add(menuItem);
+            ComponentEventListener<MenuItemClickEvent> clickListener) {
+        MenuItem menuItem = addItem();
         menuItem.add(component);
         if (clickListener != null) {
             menuItem.addClickListener(clickListener);
         }
+        return menuItem;
+    }
+
+    protected MenuItem addItem() {
+        MenuItem menuItem = new MenuItem(this);
+        add(menuItem);
         return menuItem;
     }
 

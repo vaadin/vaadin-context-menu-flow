@@ -25,6 +25,7 @@ import org.openqa.selenium.interactions.Actions;
 
 import com.vaadin.flow.component.contextmenu.demo.ContextMenuView;
 import com.vaadin.flow.demo.ComponentDemoTest;
+import com.vaadin.testbench.TestBenchElement;
 
 /**
  * Integration tests for the {@link ContextMenuView}.
@@ -75,9 +76,49 @@ public class ContextMenuDemoIT extends ComponentDemoTest {
                 message.getText());
     }
 
+    @Test
+    public void contextMenuWithChildTargets() {
+        verifyClosed();
+
+        rightClickOn(By.id("checkbox-foo"));
+        verifyOpened();
+
+        TestBenchElement foo = $("vaadin-checkbox").id("checkbox-foo");
+        Assert.assertFalse(foo.getPropertyBoolean("checked"));
+
+        Assert.assertArrayEquals(new String[] { "Toggle", "Get value" },
+                getMenuItemCaptions());
+        getMenuItems().get(0).click();
+
+        verifyClosed();
+        Assert.assertTrue(foo.getPropertyBoolean("checked"));
+
+        WebElement message = findElement(
+                By.id("context-menu-with-child-targets-message"));
+        Assert.assertEquals("-", message.getText());
+
+        rightClickOn(foo);
+        verifyOpened();
+        getMenuItems().get(1).click();
+        Assert.assertEquals("Foo value: true", message.getText());
+
+        TestBenchElement bar = $("vaadin-checkbox").id("checkbox-bar");
+        Assert.assertFalse(bar.getPropertyBoolean("checked"));
+
+        rightClickOn(bar);
+        verifyOpened();
+        Assert.assertEquals("Foo value: true", message.getText());
+        getMenuItems().get(1).click();
+        Assert.assertEquals("Bar value: false", message.getText());
+
+    }
+
     private void rightClickOn(By by) {
+        rightClickOn(findElement(by));
+    }
+
+    private void rightClickOn(WebElement element) {
         Actions action = new Actions(getDriver());
-        WebElement element = findElement(by);
         action.contextClick(element).perform();
     }
 
