@@ -48,14 +48,20 @@ public class ContextMenuView extends DemoView {
         // begin-source-example
         // source-example-heading: Basic ContextMenu
         ContextMenu contextMenu = new ContextMenu();
+        add(contextMenu);
 
         Component target = createTargetComponent();
         contextMenu.setTarget(target);
 
         Label message = new Label("-");
 
-        contextMenu.addItem("First menu item",
+        MenuItem parent = contextMenu.addItem("First menu item",
                 e -> message.setText("Clicked on the first item"));
+        MenuItem child = parent.addItem("child", e -> message.setText("child"));
+        MenuItem child2 = parent.addItem("child 2",
+                e -> message.setText("child 2"));
+        MenuItem grandChild = child2.addItem("grand child",
+                e -> message.setText("grand child"));
 
         contextMenu.addItem("Second menu item",
                 e -> message.setText("Clicked on the second item"));
@@ -64,6 +70,8 @@ public class ContextMenuView extends DemoView {
         MenuItem item = contextMenu.addItem("Disabled menu item",
                 e -> message.setText("This cannot happen"));
         item.setEnabled(false);
+
+        item.addItem("foo", null);
 
         // end-source-example
 

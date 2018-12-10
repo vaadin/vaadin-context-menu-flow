@@ -15,13 +15,17 @@
  */
 package com.vaadin.flow.component.contextmenu;
 
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ClickNotifier;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasEnabled;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
+import com.vaadin.flow.dom.Element;
 
 /**
  * Item component used inside {@link ContextMenu}
@@ -36,6 +40,8 @@ public class MenuItem extends Component
 
     private ContextMenuBase<?> contextMenu;
 
+    private Element container;
+
     MenuItem(ContextMenuBase<?> contextMenu) {
         assert contextMenu != null;
         this.contextMenu = contextMenu;
@@ -48,6 +54,39 @@ public class MenuItem extends Component
      */
     public ContextMenuBase<?> getContextMenu() {
         return contextMenu;
+    }
+
+    public MenuItem addItem(String text,
+            ComponentEventListener<ClickEvent<MenuItem>> clickListener) {
+        MenuItem menuItem = addItem(text);
+        if (clickListener != null) {
+            menuItem.addClickListener(clickListener);
+        }
+        return menuItem;
+    }
+
+    protected MenuItem addItem(String text) {
+        MenuItem menuItem = new MenuItem(getContextMenu());
+        menuItem.setText(text);
+        getContainer().appendChild(menuItem.getElement());
+        return menuItem;
+    }
+
+    private Element getContainer() {
+        if (container == null) {
+            container = new Element("div");
+            getElement().appendVirtualChild(container);
+
+            getElement().getNode()
+                    .runWhenAttached(ui -> ui.beforeClientResponse(this,
+                            context -> setContainerNodeId(ui)));
+        }
+        return container;
+    }
+
+    private void setContainerNodeId(UI ui) {
+        int nodeId = container.getNode().getId();
+        getElement().setProperty("_containerNodeId", nodeId);
     }
 
 }

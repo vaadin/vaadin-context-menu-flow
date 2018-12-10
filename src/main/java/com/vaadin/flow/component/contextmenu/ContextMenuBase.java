@@ -60,15 +60,10 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
      * Creates an empty context menu.
      */
     public ContextMenuBase() {
-        template = new Element("template");
-        getElement().appendChild(template);
-
-        container = new Element("vaadin-list-box");
+        container = new Element("div");
         getElement().appendVirtualChild(container);
-
-        getElement().getNode()
-                .runWhenAttached(ui -> ui.beforeClientResponse(this,
-                        context -> attachComponentRenderer()));
+        getElement().getNode().runWhenAttached(ui -> ui
+                .beforeClientResponse(this, context -> initMenuConnector(ui)));
 
         // Workaround for: https://github.com/vaadin/flow/issues/3496
         getElement().setProperty("opened", false);
@@ -330,8 +325,8 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
      */
     protected MenuItem addItem(String text) {
         MenuItem menuItem = new MenuItem(this);
-        add(menuItem);
         menuItem.setText(text);
+        add(menuItem);
         return menuItem;
     }
 
@@ -371,6 +366,14 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
                 "<flow-component-renderer appid=\"%s\" nodeid=\"%s\"></flow-component-renderer>",
                 appId, nodeId);
         template.setProperty("innerHTML", renderer);
+    }
+
+    private void initMenuConnector(UI ui) {
+        String appId = ui.getInternals().getAppId();
+        int nodeId = container.getNode().getId();
+        ui.getPage().executeJavaScript(
+                "window.Vaadin.Flow.contextMenuConnector.initMenuConnector($0, $1, $2)",
+                getElement(), appId, nodeId);
     }
 
 }
