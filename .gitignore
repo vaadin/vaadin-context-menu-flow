@@ -14,3 +14,4 @@ reference-screenshots
 .idea/
 vaadin-button-flow.iml
 
+**/bower_components/**

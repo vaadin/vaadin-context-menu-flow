@@ -1,0 +1,6 @@
+{
+  "name": "vaadin-context-menu-flow",
+  "dependencies": {
+    "vaadin-context-menu": "proto-items"
+  }
+}
