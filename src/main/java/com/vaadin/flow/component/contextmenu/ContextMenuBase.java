@@ -29,6 +29,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.internal.nodefeature.VirtualChildrenList;
 import com.vaadin.flow.shared.Registration;
 
 /**
@@ -366,15 +367,15 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
 
     private boolean updateScheduled = false;
 
-    private void updateChildren() {
+    void updateChildren() {
         if (updateScheduled) {
             return;
         }
         updateScheduled = true;
         runBeforeClientResponse(ui -> {
+            getItems().forEach(this::resetContainers);
             if (container != null) {
-                // container.removeFromParent();
-                // getElement().removeChild(container);
+                // should clear old virtual children
             }
             container = new Element("div");
             getElement().appendVirtualChild(container);
@@ -390,7 +391,34 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
                     getElement(), appId, nodeId);
             getElement().callFunction("$connector._updateChildren");
             updateScheduled = false;
+
+            // memory leak:
+            int size = getElement().getNode()
+                    .getFeature(VirtualChildrenList.class).size();
+            System.out.println(size);
         });
+    }
+
+    private void resetContainers(MenuItem menuItem) {
+        if (!menuItem.hasSubMenu()) {
+            menuItem.getElement().removeProperty("_containerNodeId");
+            return;
+        }
+        SubMenu subMenu = menuItem.getSubMenu();
+
+        Element subMenuContainer = new Element("div");
+        getElement().appendVirtualChild(subMenuContainer);
+
+        subMenu.getChildren().forEach(child -> {
+            Element element = child.getElement();
+            element.removeFromParent();
+            subMenuContainer.appendChild(element);
+        });
+
+        int nodeId = subMenuContainer.getNode().getId();
+        menuItem.getElement().setProperty("_containerNodeId", nodeId);
+
+        subMenu.getItems().forEach(this::resetContainers);
     }
 
     private void runBeforeClientResponse(Consumer<UI> command) {

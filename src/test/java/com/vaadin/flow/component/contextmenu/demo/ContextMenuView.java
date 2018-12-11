@@ -58,12 +58,10 @@ public class ContextMenuView extends DemoView {
 
         MenuItem parent = contextMenu.addItem("First menu item",
                 e -> message.setText("Clicked on the first item"));
-
-        MenuItem child = parent.addItem("child", e -> message.setText("child"));
-        MenuItem child2 = parent.addItem("child 2",
-                e -> message.setText("child 2"));
-        MenuItem grandChild = child2.addItem("grand child",
-                e -> message.setText("grand child"));
+        parent.getSubMenu().add(new Label("foo"));
+        MenuItem subItem = parent.getSubMenu().addItem("bar",
+                e -> message.setText("bar"));
+        subItem.getSubMenu().addItem("baz", e -> message.setText("baz"));
 
         contextMenu.addItem("Second menu item",
                 e -> message.setText("Clicked on the second item"));
@@ -82,9 +80,13 @@ public class ContextMenuView extends DemoView {
             contextMenu.add(new Label("foo"));
         });
 
+        NativeButton button3 = new NativeButton("clear sub-menu", e -> {
+            parent.getSubMenu().removeAll();
+        });
+
         // end-source-example
 
-        addCard("Basic ContextMenu", target, button, button2, message);
+        addCard("Basic ContextMenu", target, button, button2, button3, message);
         target.setId("basic-context-menu-target");
         contextMenu.setId("basic-context-menu");
     }
