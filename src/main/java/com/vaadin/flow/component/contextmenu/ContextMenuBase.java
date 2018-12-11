@@ -63,6 +63,9 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
      * Creates an empty context menu.
      */
     public ContextMenuBase() {
+        container = new Element("div");
+        getElement().appendVirtualChild(container);
+
         // Workaround for: https://github.com/vaadin/flow/issues/3496
         getElement().setProperty("opened", false);
 
@@ -373,19 +376,18 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
         }
         updateScheduled = true;
         runBeforeClientResponse(ui -> {
+            container.removeAllChildren();
             getItems().forEach(this::resetContainers);
-            if (container != null) {
-                // should clear old virtual children
-            }
-            container = new Element("div");
-            getElement().appendVirtualChild(container);
+
+            Element innerContainer = new Element("div");
+            container.appendChild(innerContainer);
             children.forEach(child -> {
                 Element element = child.getElement();
                 element.removeFromParent();
-                container.appendChild(element);
+                innerContainer.appendChild(element);
             });
             String appId = ui.getInternals().getAppId();
-            int nodeId = container.getNode().getId();
+            int nodeId = innerContainer.getNode().getId();
             ui.getPage().executeJavaScript(
                     "window.Vaadin.Flow.contextMenuConnector.initMenuConnector($0, $1, $2)",
                     getElement(), appId, nodeId);
@@ -407,7 +409,7 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
         SubMenu subMenu = menuItem.getSubMenu();
 
         Element subMenuContainer = new Element("div");
-        getElement().appendVirtualChild(subMenuContainer);
+        container.appendChild(subMenuContainer);
 
         subMenu.getChildren().forEach(child -> {
             Element element = child.getElement();
