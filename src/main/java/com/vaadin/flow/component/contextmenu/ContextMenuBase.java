@@ -29,7 +29,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.dom.Element;
-import com.vaadin.flow.internal.nodefeature.VirtualChildrenList;
 import com.vaadin.flow.shared.Registration;
 
 /**
@@ -389,15 +388,10 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
             String appId = ui.getInternals().getAppId();
             int nodeId = innerContainer.getNode().getId();
             ui.getPage().executeJavaScript(
-                    "window.Vaadin.Flow.contextMenuConnector.initMenuConnector($0, $1, $2)",
+                    "window.Vaadin.Flow.contextMenuConnector.generateItems($0, $1, $2)",
                     getElement(), appId, nodeId);
-            getElement().callFunction("$connector._updateChildren");
-            updateScheduled = false;
 
-            // memory leak:
-            int size = getElement().getNode()
-                    .getFeature(VirtualChildrenList.class).size();
-            System.out.println(size);
+            updateScheduled = false;
         });
     }
 

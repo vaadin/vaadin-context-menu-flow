@@ -47,46 +47,34 @@ window.Vaadin.Flow.contextMenuConnector = {
     };
   },
 
-  initMenuConnector: function(menu, appId, nodeId) {
-    // if (menu.$connector) {
-    //   return;
-    // }
-
+  generateItems: function(menu, appId, nodeId) {
     menu._containerNodeId = nodeId;
 
-    menu.$connector = {
-
-      appId: appId,
-
-      _getContainer: function(nodeId) {
-        try {
-          return window.Vaadin.Flow.clients[this.appId].getByNodeId(nodeId);
-        } catch (error) {
-          console.error("Could not get node %s from app %s", this.nodeId, this.appId);
-          console.error(error);
-        }
-      },
-
-      _getChildItems: function(parent) {
-        const container = this._getContainer(parent._containerNodeId);
-        const items = Array.from(container.children).map(child => {
-          // const item = {label: child.textContent};
-          const item = {component: child};
-          if (child instanceof Vaadin.ItemElement && child._containerNodeId) {
-            item.children = this._getChildItems(child);
-          }
-          return item;
-        });
-        console.log(items);
-        return items;
-      },
-
-      _updateChildren: function() {
-        const items = menu.$connector._getChildItems(menu);
-        console.log('all items', items);
-        menu.items = items;
+    const getContainer = function(nodeId) {
+      try {
+        return window.Vaadin.Flow.clients[appId].getByNodeId(nodeId);
+      } catch (error) {
+        console.error("Could not get node %s from app %s", nodeId, appId);
+        console.error(error);
       }
+    };
 
-    }
+    const getChildItems = function(parent) {
+      const container = getContainer(parent._containerNodeId);
+      const items = Array.from(container.children).map(child => {
+        // const item = {label: child.textContent};
+        const item = {component: child};
+        if (child instanceof Vaadin.ItemElement && child._containerNodeId) {
+          item.children = getChildItems(child);
+        }
+        return item;
+      });
+      console.log(items);
+      return items;
+    };
+
+    const items = getChildItems(menu);
+    console.log('all items', items);
+    menu.items = items;
   }
 }
