@@ -48,9 +48,9 @@ window.Vaadin.Flow.contextMenuConnector = {
   },
 
   initMenuConnector: function(menu, appId, nodeId) {
-    if (menu.$connector) {
-      return;
-    }
+    // if (menu.$connector) {
+    //   return;
+    // }
 
     menu._containerNodeId = nodeId;
 
@@ -81,14 +81,12 @@ window.Vaadin.Flow.contextMenuConnector = {
         return items;
       },
 
-      _updateItems: function() {
+      _updateChildren: function() {
         const items = menu.$connector._getChildItems(menu);
         console.log('all items', items);
         menu.items = items;
       }
 
     }
-
-    menu.$connector._updateItems();
   }
 }

@@ -23,6 +23,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.dom.Element;
@@ -57,6 +58,7 @@ public class ContextMenuView extends DemoView {
 
         MenuItem parent = contextMenu.addItem("First menu item",
                 e -> message.setText("Clicked on the first item"));
+
         MenuItem child = parent.addItem("child", e -> message.setText("child"));
         MenuItem child2 = parent.addItem("child 2",
                 e -> message.setText("child 2"));
@@ -71,11 +73,18 @@ public class ContextMenuView extends DemoView {
                 e -> message.setText("This cannot happen"));
         item.setEnabled(false);
 
-        item.addItem("foo", null);
+        NativeButton button = new NativeButton("add component at index 1",
+                e -> {
+                    contextMenu.addComponentAtIndex(1, new Label("foo"));
+                });
+
+        NativeButton button2 = new NativeButton("add component", e -> {
+            contextMenu.add(new Label("foo"));
+        });
 
         // end-source-example
 
-        addCard("Basic ContextMenu", target, message);
+        addCard("Basic ContextMenu", target, button, button2, message);
         target.setId("basic-context-menu-target");
         contextMenu.setId("basic-context-menu");
     }

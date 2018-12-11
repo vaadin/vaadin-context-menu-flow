@@ -15,15 +15,15 @@
  */
 package com.vaadin.flow.component.contextmenu;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.Stream.Builder;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
@@ -56,15 +56,12 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
 
     private boolean autoAddedToTheUi;
 
+    private List<Component> children = new ArrayList<>();
+
     /**
      * Creates an empty context menu.
      */
     public ContextMenuBase() {
-        container = new Element("div");
-        getElement().appendVirtualChild(container);
-        getElement().getNode().runWhenAttached(ui -> ui
-                .beforeClientResponse(this, context -> initMenuConnector(ui)));
-
         // Workaround for: https://github.com/vaadin/flow/issues/3496
         getElement().setProperty("opened", false);
 
@@ -226,7 +223,8 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
         for (Component component : components) {
             Objects.requireNonNull(component,
                     "Component to add cannot be null");
-            container.appendChild(component.getElement());
+            children.add(component);
+            updateChildren();
         }
     }
 
@@ -237,8 +235,9 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
         for (Component component : components) {
             Objects.requireNonNull(component,
                     "Component to remove cannot be null");
-            if (container.equals(component.getElement().getParent())) {
-                container.removeChild(component.getElement());
+            if (children.contains(component)) {
+                children.remove(component);
+                updateChildren();
             } else {
                 throw new IllegalArgumentException("The given component ("
                         + component + ") is not a child of this component");
@@ -252,7 +251,8 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
      */
     @Override
     public void removeAll() {
-        container.removeAllChildren();
+        children.clear();
+        updateChildren();
     }
 
     /**
@@ -274,9 +274,8 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
             throw new IllegalArgumentException(
                     "Cannot add a component with a negative index");
         }
-        // The case when the index is bigger than the children count is handled
-        // inside the method below
-        container.insertChild(index, component.getElement());
+        children.add(index, component);
+        updateChildren();
     }
 
     /**
@@ -288,10 +287,7 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
      */
     @Override
     public Stream<Component> getChildren() {
-        Builder<Component> childComponents = Stream.builder();
-        container.getChildren().forEach(childElement -> ComponentUtil
-                .findComponents(childElement, childComponents::add));
-        return childComponents.build();
+        return children.stream();
     }
 
     /**
@@ -368,12 +364,38 @@ public class ContextMenuBase<C extends ContextMenuBase<C>>
         template.setProperty("innerHTML", renderer);
     }
 
-    private void initMenuConnector(UI ui) {
-        String appId = ui.getInternals().getAppId();
-        int nodeId = container.getNode().getId();
-        ui.getPage().executeJavaScript(
-                "window.Vaadin.Flow.contextMenuConnector.initMenuConnector($0, $1, $2)",
-                getElement(), appId, nodeId);
+    private boolean updateScheduled = false;
+
+    private void updateChildren() {
+        if (updateScheduled) {
+            return;
+        }
+        updateScheduled = true;
+        runBeforeClientResponse(ui -> {
+            if (container != null) {
+                // container.removeFromParent();
+                // getElement().removeChild(container);
+            }
+            container = new Element("div");
+            getElement().appendVirtualChild(container);
+            children.forEach(child -> {
+                Element element = child.getElement();
+                element.removeFromParent();
+                container.appendChild(element);
+            });
+            String appId = ui.getInternals().getAppId();
+            int nodeId = container.getNode().getId();
+            ui.getPage().executeJavaScript(
+                    "window.Vaadin.Flow.contextMenuConnector.initMenuConnector($0, $1, $2)",
+                    getElement(), appId, nodeId);
+            getElement().callFunction("$connector._updateChildren");
+            updateScheduled = false;
+        });
+    }
+
+    private void runBeforeClientResponse(Consumer<UI> command) {
+        getElement().getNode().runWhenAttached(ui -> ui
+                .beforeClientResponse(this, context -> command.accept(ui)));
     }
 
 }
