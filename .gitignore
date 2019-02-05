@@ -12,5 +12,5 @@ reference-screenshots
 
 # IntelliJ IDEA files
 .idea/
-vaadin-button-flow.iml
+*.iml
 
