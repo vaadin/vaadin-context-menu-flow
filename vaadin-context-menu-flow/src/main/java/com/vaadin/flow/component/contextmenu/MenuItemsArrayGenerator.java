@@ -43,9 +43,6 @@ public class MenuItemsArrayGenerator<I extends MenuItemBase<?, I, ?>>
         this.menu = menu;
         container = new Element("div");
         getElement().appendVirtualChild(container);
-
-        getElement().getNode().runWhenAttached(ui -> ui.getPage()
-                .addJavaScript("frontend://contextMenuConnector.js"));
     }
 
     /**
@@ -82,7 +79,7 @@ public class MenuItemsArrayGenerator<I extends MenuItemBase<?, I, ?>>
         int containerNodeId = createNewContainer(subMenu.getChildren());
         menuItem.getElement().setProperty("_containerNodeId", containerNodeId);
 
-        subMenu.getItems().stream().forEach(this::resetContainers);
+        subMenu.getItems().forEach(this::resetContainers);
     }
 
     private int createNewContainer(Stream<Component> components) {

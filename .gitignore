@@ -14,3 +14,7 @@ reference-screenshots
 .idea/
 *.iml
 
+
+package*.json
+webpack.config.js
+**/node_modules/

@@ -1,3 +1,5 @@
+import {addListener, gestures, removeListener} from '@polymer/polymer/lib/utils/gestures.js';
+
 window.Vaadin.Flow.contextMenuConnector = {
 
   // NOTE: This is for the TARGET component, not for the <vaadin-context-menu> itself
@@ -18,8 +20,8 @@ window.Vaadin.Flow.contextMenuConnector = {
         this.removeListener();
         this.openOnEventType = eventType;
 
-        if (Polymer.Gestures.gestures[eventType]) {
-          Polymer.Gestures.addListener(target, eventType, this.openOnHandler);
+        if (gestures[eventType]) {
+          addListener(target, eventType, this.openOnHandler);
         } else {
           target.addEventListener(eventType, this.openOnHandler);
         }
@@ -27,8 +29,8 @@ window.Vaadin.Flow.contextMenuConnector = {
 
       removeListener: function() {
         if (this.openOnEventType) {
-          if (Polymer.Gestures.gestures[this.openOnEventType]) {
-            Polymer.Gestures.removeListener(target, this.openOnEventType, this.openOnHandler);
+          if (gestures[this.openOnEventType]) {
+            removeListener(target, this.openOnEventType, this.openOnHandler);
           } else {
             target.removeEventListener(this.openOnEventType, this.openOnHandler);
           }
