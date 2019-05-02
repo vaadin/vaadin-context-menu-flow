@@ -10,7 +10,7 @@
         <version>3.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>vaadin-context-menu-flow-testbench</artifactId>
+    <artifactId>vaadin-context-menu-testbench</artifactId>
     <packaging>jar</packaging>
 
     <name>Vaadin Context Menu Testbench API</name>
