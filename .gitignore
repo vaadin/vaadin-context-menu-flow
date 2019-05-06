@@ -3,6 +3,8 @@ target/
 
 # Npm
 node_modules
+package*.json
+webpack.config.js
 
 # Eclipse files
 .project
