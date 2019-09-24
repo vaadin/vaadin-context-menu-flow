@@ -4,7 +4,7 @@ target/
 # Npm
 node_modules
 package*.json
-webpack.config.js
+webpack.*.js
 
 # Eclipse files
 .project
